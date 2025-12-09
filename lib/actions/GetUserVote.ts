@@ -21,7 +21,14 @@ let GetUserVote = async (params: {
   await dbConnect();
   const auth_session = await auth();
   const userId = auth_session?.user?.id;
-  if (!userId) throw new Error("Unauthorized");
+  if (!userId) {
+    return {
+      success: true,
+      data: {
+        userVote: null,
+      },
+    };
+  }
   const validatedData = validateBody(params, GetUserVoteSchema);
 
   const { type, typeId } = validatedData.data;

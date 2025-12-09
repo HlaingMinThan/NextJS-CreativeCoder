@@ -5,6 +5,7 @@ import Button from "@/components/Button";
 import React, { useState } from "react";
 import AuthForm from "./AuthForm";
 import Input from "@/components/Input";
+import { toast } from "react-toastify";
 
 import { useRouter } from "next/navigation";
 import ROUTES from "@/routes";
@@ -37,33 +38,48 @@ function AuthenticationForm({
     password: "",
   });
   let [errors, setErrors] = useState<FormErrors | null>(null);
+  let [isPending, setIsPending] = useState(false);
 
   let router = useRouter();
 
   let submit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrors(null);
-    let result = await submitAction(formData);
-    if (result.success) {
-      console.log("success");
-      router.push(ROUTES.HOME);
-    } else {
-      if ("details" in result && result.details) {
-        return setErrors(result.details as FormErrors);
+    setIsPending(true);
+    try {
+      let result = await submitAction(formData);
+      if (result.success) {
+        console.log("success");
+        toast.success(
+          type === "login" ? "Login Successful" : "Register Successful"
+        );
+        router.push(ROUTES.HOME);
+      } else {
+        if ("details" in result && result.details) {
+          setErrors(result.details as FormErrors);
+          toast.error("Please check the form for errors");
+        } else if (
+          "message" in result &&
+          result.message === "Email Already Exists"
+        ) {
+          setErrors({
+            email: [result.message],
+          });
+        } else if (
+          "message" in result &&
+          result.message === "Username Already Exists"
+        ) {
+          setErrors({
+            username: [result.message],
+          });
+        } else {
+          toast.error(result.message || "An error occurred");
+        }
       }
-      if ("message" in result && result.message === "Email Already Exists") {
-        return setErrors({
-          email: [result.message],
-        });
-      }
-      if ("message" in result && result.message === "Username Already Exists") {
-        return setErrors({
-          username: [result.message],
-        });
-      }
-      setErrors({
-        password: [result.message],
-      });
+    } catch (error) {
+      toast.error("An unexpected error occurred");
+    } finally {
+      setIsPending(false);
     }
   };
   return (
@@ -112,6 +128,7 @@ function AuthenticationForm({
       <div>
         <Input
           label="Password"
+          type="password"
           onChange={(e) =>
             setFormData((prev) => ({ ...prev, password: e.target.value }))
           }
@@ -121,7 +138,9 @@ function AuthenticationForm({
         )}
       </div>
       <div>
-        <Button type="submit">{type === "login" ? "Login" : "Register"}</Button>
+        <Button type="submit" disabled={isPending}>
+          {isPending ? "Loading..." : type === "login" ? "Login" : "Register"}
+        </Button>
       </div>
       <AuthForm />
     </form>

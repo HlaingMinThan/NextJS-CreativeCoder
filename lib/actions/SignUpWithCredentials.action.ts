@@ -64,12 +64,18 @@ export async function signUpWithCredentials(params: {
     );
 
     await session.commitTransaction();
-    await signIn("credentials", { email, password, redirect: false });
-    return { success: true };
   } catch (error) {
     await session.abortTransaction();
     return actionError(error);
   } finally {
     await session.endSession();
   }
+
+  await signIn("credentials", {
+    email: params.email,
+    password: params.password,
+    redirect: false,
+  });
+
+  return { success: true };
 }
