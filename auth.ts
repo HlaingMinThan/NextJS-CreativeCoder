@@ -7,6 +7,9 @@ import Google from "next-auth/providers/google";
 import { api } from "./lib/api";
 import validateBody from "./lib/validateBody";
 import SignInSchema from "./lib/schemas/SignInSchema";
+import dbConnect from "./lib/dbConnect";
+import Account from "./database/account.model";
+import User from "./database/user.model";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -16,15 +19,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       async authorize(credentials) {
         let validationFields = validateBody(credentials, SignInSchema);
         if (validationFields.success) {
+          await dbConnect();
           const { email, password } = validationFields.data;
-          const { data: existingAccount } = await api.accounts.getByProvider(
-            email
-          );
+          const existingAccount = await Account.findOne({
+            providerAccountId: email,
+            provider: "credentials",
+          });
           if (!existingAccount) return null;
 
-          const { data: existingUser } = await api.users.getById(
-            existingAccount.userId.toString()
-          );
+          const existingUser = await User.findById(existingAccount.userId);
           if (!existingUser) return null;
 
           const isValidPassword = await bcrypt.compare(

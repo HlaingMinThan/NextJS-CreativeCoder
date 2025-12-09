@@ -4,12 +4,14 @@ import User from "@/database/user.model";
 import { handleErrorResponse, handleSuccessResponse } from "@/lib/response";
 import UserSchema from "@/lib/schemas/UserSchema";
 import validateBody from "@/lib/validateBody";
+import dbConnect from "@/lib/dbConnect";
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await dbConnect();
     const { id } = await params;
     if (!Types.ObjectId.isValid(id)) {
       throw new Error("Invalid user id");
@@ -30,6 +32,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await dbConnect();
     const { id } = await params;
     if (!Types.ObjectId.isValid(id)) {
       throw new Error("Invalid user id");
@@ -50,6 +53,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await dbConnect();
     const { id } = await params;
     const body = await request.json();
     if (!Types.ObjectId.isValid(id)) {
