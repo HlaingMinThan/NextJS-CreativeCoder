@@ -27,9 +27,11 @@ export async function GET() {
     const shuffledArticles = shuffleArray(articles);
     // Delay response by 2 seconds
     await new Promise((resolve) => setTimeout(resolve, 2000));
-
+    console.log("result in tech news api");
+    console.log(shuffleArray);
     return handleSuccessResponse(shuffledArticles);
   } catch (e: unknown) {
+    console.log(e, "error in tech news api");
     return handleErrorResponse(e);
   }
 }
